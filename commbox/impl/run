@@ -1,0 +1,3 @@
+gcc tokenizer.c -o exe
+./exe
+rm exe

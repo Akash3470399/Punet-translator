@@ -1,0 +1,52 @@
+Actions correspond to the computations performed by the commbox. 
+Each action consists of a guard giving the conditions under which
+ the action is enabled and the correspondingstatements when the action is enabled. 
+
+Guard: 
+(a) Boolean predicate 
+(b) receive guard: (resp,addr of remote commbox) is at the head of the pipe from remote commbox
+(c) timeout [name] to handle message loss. To set timeout we have statement (c)
+
+Stmts: 
+(a) (In commbox z): send msg to y induces insert msg into pipe between commbox z and commbox y  
+(b) assignment stmts, etc.  
+(c) activate [timeout name] with [time delay]
+
+
+Eg. 1:
+
+commbox s1
+const r1: address
+var readys1: boolean = true
+begin
+    readys1 >>> send msg to r1
+                readys1 := false
+  | receive resp from r1 >>> readys1 = true
+end
+
+commbox r1
+var s1: address
+begin
+    receive msg from s1 >>> send resp to s1
+end
+
+Eg. 2
+
+commbox a
+const b : address;
+      delay : integer = 300;
+      pqr : integer = 150;
+var readya : boolean = true
+    initial : boolean = true
+begin
+    initial >>> act q with delay; initial := false
+  | timeout q >>> send msg to b;
+                      readya := false;
+                      act rsnd with pqr
+  | timeout rsnd >>> if !readya >>> send msg to b;
+                                    act rsnd with pqr
+                      | readya >>> skip
+                     fi
+
+  | rev resp from b >>> readya := true; act q with delay
+end

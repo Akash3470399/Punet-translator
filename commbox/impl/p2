@@ -1,0 +1,50 @@
+commbox s1;
+
+const a1:address[],
+      t1:integer[],
+      MAX:integer = 10;
+
+var readys1: boolean = true, 
+    qcnt: integer[],
+    online: boolean[],
+    allonline:boolean,
+    allexhausted : boolean;
+
+begin
+    | readys1 >>>
+              for (k,addr) in a1 do
+                  send msg to addr;
+                  activate q[addr] with t1[addr];
+                  qcnt[addr] := 1;
+              od
+              readys1 := false;
+    | recv resp on a1 >>> 
+                  for (k,addr) in a1 do
+                     if recv resp from addr then
+                        recv resp from addr;
+                        online[addr] := true;
+                     fi
+                     allonline := online[addr] and allonline;
+                od
+                if (allonline) then 
+                   exec s3; 
+                fi
+   | timeout q >>> 
+                for (k,addr) in a1 do
+                    if timeout q[addr] and qcnt[addr] <= MAX then
+                      send msg to addr;
+                      activate q[addr] with t1[addr];
+                      inc qcnt[addr];
+                    fi
+                od
+                allexhausted := true;
+                for (k,addr) in a1 do
+                    allexhausted := ((qcnt[addr] > MAX) or (addr in online)) and allexhausted;
+                od
+                if allexhausted then 
+                    exec s4 online;
+                fi
+end
+
+   
+
