@@ -7,29 +7,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../intr/helper.h"
 #include "../intr/tokenizer.h"
+#include "../intr/helper.h"
 
 
-// return 1 if ch is a space char else 0
-int is_space(char ch)
-{
-        return (ch == ' ' | ch == '\n' | ch == '\t');
-}
 
-// check if ch is present in charSeq char array.
-// charSeq is char array & at the end it have '\0' char
-int is_present(char ch, char charSeq[])
-{
-        int i = 0, result = 0;
-        while(charSeq[i] != '\0' && (result == 0))
-        {
-                if(ch == charSeq[i])
-                       result = 1;
-                i += 1;
-        }
-        return result;
-}
 
 // function return corresponding enum value of a tokne string
 // return -1 if string is not valid keyword.
@@ -54,6 +36,9 @@ enum token str_to_enum(char *tok_str)
 	return token_id;
 }
 
+// function read content from file & saperate it as token string
+// & return token (enum) value 
+// also store the token sting in cur_tok
 enum token next()
 {
 
@@ -73,7 +58,10 @@ enum token next()
 		if(len > 0 && is_space(ch))
 			found = 1;
 		else if(is_present(ch, delimiters1))
+		{
 			tok_type1 = 1;
+			found = 1;
+		}
 		else if(is_present(ch, delimeters2))
 			tok_type1 = 2;
 		else if(!is_space(ch)) 
@@ -101,6 +89,8 @@ enum token next()
 }
 
 
+
+// hadels file to tokenize
 void tokenizer_config()
 {
 	char tok_filename[128];
@@ -114,16 +104,23 @@ void tokenizer_config()
 		cur_tok = (char *)malloc(sizeof(char) * 32);
 }
 
-
-int main()
+// print tokens read from file
+// print as (tok_enum_value tok_string)
+//
+void print_tokens()
 {
-
-	tokenizer_config();	
+	int pos = 0;
+	if(tokenizeing_fd == -2)
+		tokenizer_config();	
+	else
+		pos = lseek(tokenizeing_fd, 0, SEEK_SET);
+	
 	enum token tok = next();
 	while(cur_tok != NULL)
 	{
-		printf("%d %s\n", tok, cur_tok);
+		printf("%d\t%s\n", tok, cur_tok);
 		tok = next();
 	}
-	return 0;
+	lseek(tokenizeing_fd, pos, SEEK_SET);
 }
+
