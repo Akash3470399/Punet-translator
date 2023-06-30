@@ -19,18 +19,18 @@ int hash(struct symbol *sym, int capacity)
 }
 
 // if size of hashtable is full then grow the table size by 2
-void grow_hashtable(struct sym_tab **symbol_tab)
+struct sym_tab *grow_hashtable(struct sym_tab *symbol_tab)
 {
 	int i = 0;
-	struct sym_tab *new_tab = get_new_table((*symbol_tab)->capacity * 2);
-	while(i < (*symbol_tab)->capacity)
+	struct sym_tab *new_tab = get_new_table(symbol_tab->capacity * 2);
+	while(i < symbol_tab->capacity)
 	{
-		if((*symbol_tab)->table[i] != NULL)
-			preorder_put(new_tab, (*symbol_tab)->table[i]);
+		if(symbol_tab->table[i] != NULL)
+			new_tab = preorder_put(new_tab, symbol_tab->table[i]);
 		i += 1;
 	}
-	destroy_table(*symbol_tab);
-	*symbol_tab = new_tab;
+	destroy_table(symbol_tab);
+	return new_tab;
 }
 
 // initilizations requied for symbol table hash table.
@@ -56,21 +56,25 @@ void destroy_table(struct sym_tab *tab)
 void print_table(struct sym_tab *tab)
 {
 	int i = 0;
+	printf("capacity %d\n", tab->capacity);
 	while(i < tab->capacity)
 	{
 		if(tab->table[i] != NULL)
+		{	printf("idx %d ", i);
 			preorder_print(tab->table[i]);
+			printf("\n");
+		}
 		i += 1;
 	}
 }
 // put sym symbol in sym_tab hash map
 // collided symbols are stored in the form of bst
 // according to strcmp value of names of symbles.
-void put(struct sym_tab *symbol_tab, struct symbol *sym)
+struct sym_tab *put(struct sym_tab *symbol_tab, struct symbol *sym)
 {	
 	int idx;
 	if(symbol_tab->size >= symbol_tab->capacity)
-		grow_hashtable(&symbol_tab);
+		symbol_tab = grow_hashtable(symbol_tab);
 
         idx = hash(sym, symbol_tab->capacity);
 	if(symbol_tab->table[idx] == NULL)
@@ -80,7 +84,37 @@ void put(struct sym_tab *symbol_tab, struct symbol *sym)
 	}
 	else
 		collide_put(symbol_tab->table[idx], sym);		
+	return symbol_tab;
 }
+
+// serch if a symbol is present by symbol name
+SearchResult search(struct sym_tab *tab, char *key)
+{
+	struct symbol s = {key, 'a', 0, NULL, NULL}; 
+	int idx = hash(&s, tab->capacity);
+	struct symbol *ptr;
+	
+	SearchResult sr;
+	sr.found = 0;
+
+	if(tab->table[idx] != NULL)
+	{
+		ptr = tab->table[idx];
+		while(ptr != NULL && sr.found == 0)
+		{
+			if(strcmp(key, ptr->name) == 0)
+			{
+				sr.found = 1;
+				sr.sym = ptr;
+			}
+			else if(strcmp(key, ptr->name) < 0)
+				ptr = ptr->left;
+			else ptr = ptr->right;			
+		}
+	}
+	return sr;	
+}
+
 
 // if index is pre filled then store multiple symbols in bst form.
 // put symbol sym in bst with given parent
@@ -105,39 +139,61 @@ void collide_put(struct symbol *parent, struct symbol *sym)
 	}
 }
 // put each symbol from bst sym in symbol_tab
-void preorder_put(struct sym_tab *symbol_tab, struct symbol *sym)
+struct sym_tab *preorder_put(struct sym_tab *symbol_tab, struct symbol *sym)
 {
 	if(sym != NULL)
 	{
 		struct symbol *left = sym->left, *right = sym->right;
 		sym->left = NULL;
 		sym->right = NULL;
-		put(symbol_tab, sym);
+		symbol_tab = put(symbol_tab, sym);
 		
-		preorder_put(symbol_tab, left);
+		symbol_tab = preorder_put(symbol_tab, left);
 	
-		preorder_put(symbol_tab, right);
+		symbol_tab = preorder_put(symbol_tab, right);
 	}	
+	return symbol_tab;
 }
 
 void preorder_print(struct symbol *sym)
 {
 	if(sym != NULL)
 	{
-		printf("%s\n", sym->name);
+		printf("%s\t", sym->name);
 		preorder_print(sym->left);
 		preorder_print(sym->right);
 	}
 }
 
+
 int main()
 {
-	struct symbol s1 = {"s1", 'a', 1, NULL, NULL};
-	struct symbol s2 = {"s2", 'a', 1, NULL, NULL};
-	struct symbol s3 = {"s3", 'a', 1, NULL, NULL};
-	struct sym_tab *t = get_new_table(1);
-	put(t, &s1);
-	put(t, &s2);
-	put(t, &s3);
-	print_table(t);
+	return 0;
 }
+
+/*
+int main()
+{
+	int i = 0;
+	char str[30];
+	struct symbol s1 = {"s1asdf", 'a', 1, NULL, NULL};
+	struct symbol s2 = {"sd2fsdf", 'a', 1, NULL, NULL};
+	struct symbol s3 = {"s3", 'a', 1, NULL, NULL};
+	struct symbol s4 = {"s4dfdsd", 'a', 1, NULL, NULL};
+	struct symbol s5 = {"ssldfk5", 'a', 1, NULL, NULL};
+	struct sym_tab *t = get_new_table(1);
+	t = put(t, &s1);
+	t = put(t, &s2);
+	t = put(t, &s3);
+	t = put(t, &s4);
+	t = put(t, &s5);
+	print_table(t);
+	SearchResult sr;
+	while(i < 3)
+	{
+		printf("Enter key ");
+		scanf("%s", str);
+		sr = search(t, str);
+		printf("%d \n", sr.found);
+	}
+}*/
