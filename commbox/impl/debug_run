@@ -1,0 +1,6 @@
+gcc helper.c -c -o helper -g 
+gcc tokenizer.c -c -o tokenizer -g
+gcc syntax_checker.c tokenizer helper -o exe -g
+rm helper tokenizer
+gdb ./exe
+rm exe 

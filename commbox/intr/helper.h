@@ -10,28 +10,9 @@ int is_space(char);
 int is_present(char ch, char charSeq[]);
 
 
-char *keywords_arr[] = {
-	"commbox", "const", "var", "integer", "boolean", "address", "begin", "if", "then", 
-	"fi", "for", "in", "do", "od", "activate", "with", "timeout", "send", "to", "recv",
-        "from", "end", "true", "false", NULL	
-};
-
-char *paren_arr[] = {
-	"(", ")", "[", "]", NULL
-};
-
-char *cmp_ops_arr[] = {
-	"<", ">", "==", "<=", ">=", NULL
-};	
-
-char *logical_ops_arr[] = {
-	"and", "or", "not", NULL
-};
-
-
-char *spcl_ops[] = {
-	"|", ",", ":", ";", ":=", ">>>", NULL
-};
-
-
+extern char *keywords_arr[];
+extern char *paren_arr[];
+extern char *cmp_ops_arr[];
+extern char *logical_ops_arr[];
+extern char *spcl_ops[];
 #endif

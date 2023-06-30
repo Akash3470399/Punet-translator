@@ -12,8 +12,7 @@ enum token {
 	ID = 500
 };
 
-int tokenizeing_fd = -2;
-char *cur_tok;
+extern char *cur_tok;
 
 enum token str_to_enum(char *tok_str);
 void tokenizer_config();

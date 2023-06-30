@@ -6,7 +6,6 @@
 
 int err = 0;
 
-
 void check_is_valid_id()
 {
 	char str[32];
@@ -24,14 +23,17 @@ void check_is_valid_id()
 void check_is_same(enum token exp_tok)
 {
 	enum token inp_tok = next();
-	err |= (exp_tok == inp_tok);
+	err |= !(exp_tok == inp_tok);
 }
 
 void check_commbox()
 {
+	char name[32];
 	check_is_same(COMMBOX);
 	check_is_valid_id();
+	strcpy(name, cur_tok);
 	check_is_same(SEMICOLON);
+		
 }
 
 int main()

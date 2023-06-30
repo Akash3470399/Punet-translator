@@ -12,6 +12,8 @@
 
 
 
+int tokenizeing_fd = -2;
+char *cur_tok;
 
 // function return corresponding enum value of a tokne string
 // return -1 if string is not valid keyword.

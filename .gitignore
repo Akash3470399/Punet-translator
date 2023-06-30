@@ -1,5 +1,6 @@
 *.o
 *.out
+*.swp
 tokenizer
 helper
 exe
