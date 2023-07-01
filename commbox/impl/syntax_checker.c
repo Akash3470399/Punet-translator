@@ -1,45 +1,218 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../intr/tokenizer.h"
 #include "../intr/helper.h"
-
+#include "../intr/symbol_table.h"
+#include "../intr/parse_tree.h"
+#include "../intr/syntax_checker.h"
 int err = 0;
 
-void check_is_valid_id()
-{
-	char str[32];
-	enum token tok = next();
-	if(tok == -1)
-	{
-		// cur_tok is from tokenizer file which store the current token string
-		strcpy(str, cur_tok); 
-		err |= !is_valid_id(str);
-	}
-	else
-		err |= 1;
-}
 
-void check_is_same(enum token exp_tok)
+void check_for_tok(enum token exp_tok)
 {
 	enum token inp_tok = next();
 	err |= !(exp_tok == inp_tok);
 }
 
+void check_valid_type(enum token tok)
+{
+	err |= !(tok == INTEGER || tok == BOOLEAN || tok == ADDRESS);
+}
+
+
+void check_valid_value(struct symbol **sym)
+{
+	enum token tok = next();
+	SearchResult sr;
+	int *val;
+
+	// also check if value is of same type as dedined in symbol type.
+	switch(tok)
+	{
+		case ID:
+			sr = search(p.var_sym, cur_tok);
+			// check if value symbol(ID) is predefined
+			if(sr.found == 1 && (sr.sym->type == (*sym)->type))
+				(*sym)->value = sr.sym->value;
+			else
+				err = 1;
+			break;
+
+		case NUMERIC:
+			if((*sym)->type == INTEGER)
+			{
+				val = (int *)malloc(sizeof(int));
+				*val = atoi(cur_tok);
+				(*sym)->value = (void *)val; 
+			}
+			else err = 1;
+			break;
+
+		case TRUE:
+		case FALSE:
+			if((*sym)->type == BOOLEAN)
+			{
+				val = (int *)malloc(sizeof(int));
+				if(tok == TRUE) *val = 1; else *val = 0;
+				(*sym)->value = (void *)val;
+			}
+			else err = 1;
+			break;
+
+		default:
+			err = 1;
+	}
+}
+
+void check_is_valid_id()
+{
+	enum token tok = next();
+	if(tok == ID)
+	{
+		// cur_tok is from tokenizer file which store the current token string
+		err |= !is_valid_id(cur_tok);
+	}
+	else
+		err |= 1;
+}
+
 void check_commbox()
 {
 	char name[32];
-	check_is_same(COMMBOX);
+	check_for_tok(COMMBOX);
 	check_is_valid_id();
 	strcpy(name, cur_tok);
-	check_is_same(SEMICOLON);
-		
+	check_for_tok(SEMICOLON);
+	if(err == 0)
+	{
+		p.name = (char *)malloc(sizeof(char) *(strlen(name)+1));
+		strcpy(p.name, name);
+	}
 }
+
+
+// valid data item is
+// ID:TYPE
+// ID:TYPE[]
+// ID:TYPE[<integer value>]
+void check_data_item(char c_v)
+{
+	int size = 1, type, *val;
+	char name[32];
+	enum token tok;
+	struct symbol *sym;
+	SearchResult sr1, sr2;
+
+	check_is_valid_id();
+	strcpy(name, cur_tok);
+
+	check_for_tok(COLON);
+
+	type = next();
+	check_valid_type(type);
+	
+	sym = create_symbol(name, type, size, NULL); // last parameter is value
+		
+	tok = next();
+	if(tok == OSQR_PAREN)// array declaration
+	{
+		tok = next();
+		if(tok == CSQR_PAREN) size = 1;
+		else
+		{
+			if(tok == NUMERIC)
+			{		
+				size = atoi(cur_tok);
+				sym->size = size;
+				check_for_tok(CSQR_PAREN);
+			}
+			else if(tok == ID)
+			{
+				sr1 = search(p.var_sym, cur_tok);
+				sr2 = search(p.const_sym, cur_tok);
+				if((sr1.found == 1) && (sr1.sym->type == INTEGER) && (sr1.sym->value != NULL))
+					val = (int *)sr1.sym->value;
+				else if((sr2.found == 1) && (sr2.sym->type == INTEGER) && (sr2.sym->value != NULL))
+					val = (int *)sr2.sym->value;
+				else err = 1;
+				sym->size = *val;
+				check_for_tok(CSQR_PAREN);
+			}	
+			else err = 1;
+		}
+		tok = next();
+	}
+	else if(tok == DECLR_ASIGN) // initilisation
+	{
+		check_valid_value(&sym);
+		tok = next();
+	}
+
+	// checking if symbol is already present.
+	sr1 = search(p.var_sym, name);
+	sr2 = search(p.const_sym, name);
+	err |= (sr1.found || sr2.found);
+
+	if(err == 0)
+	{
+		// add symbol to appropiate table.
+		if(c_v == 'v') p.var_sym = put(p.var_sym, sym);
+		else if(c_v == 'c') p.const_sym = put(p.const_sym, sym);
+
+		//validate next data item.
+		if(tok == COMMA)
+			check_data_item(c_v);
+		else if(tok != SEMICOLON)
+			err = 1;
+	}
+}
+
+void check_declr()
+{
+	enum token tok = next();
+	if(tok == VAR)
+		check_data_item('v');			
+	else if (tok == CONST)
+		check_data_item('c');
+	else
+		err = 1;
+	
+	tok = next();
+	if(tok == VAR || tok == CONST)
+	{
+		go_back();
+		check_declr();
+	}
+
+}	
 
 int main()
 {
+	enum token tok;
 	tokenizer_config();
+	//print_tokens();
+	
+	p.var_sym = get_new_table(2);
+	p.const_sym = get_new_table(2);
 	check_commbox();
+	tok = next();
+	if(tok == VAR || tok == CONST)
+	{
+		go_back();
+		check_declr();
+
+		if(err == 1) printf("Invalid declaration block.\n");
+	}
 	printf("err :%d\n", err);
 	return 0;
+	go_back();
+
+	check_begin();	
+	//return 0;
+}
+void check_begin()
+{
+	int i;
 }

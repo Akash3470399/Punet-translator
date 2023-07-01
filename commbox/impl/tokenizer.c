@@ -21,7 +21,7 @@ enum token str_to_enum(char *tok_str)
 {
 	int i = 0, j = 0, token_id = -1;
 	char **str_arrs[] = {
-		keywords_arr, paren_arr, cmp_ops_arr, logical_ops_arr, spcl_ops, NULL
+		keywords_arr, types_arr, paren_arr, cmp_ops_arr, logical_ops_arr, spcl_ops, NULL
 	};
 
 	while(token_id == -1 && (str_arrs[i] != NULL))
@@ -35,6 +35,8 @@ enum token str_to_enum(char *tok_str)
 		}
 		i += 1;
 	}
+	if(token_id == -1 && (is_number(tok_str) == 1)) token_id = NUMERIC;
+	else if(token_id == -1 && (is_valid_id(tok_str) == 1)) token_id = ID; 
 	return token_id;
 }
 
@@ -90,7 +92,10 @@ enum token next()
 	return token_id;
 }
 
-
+void go_back()
+{
+	lseek(tokenizeing_fd, -1*strlen(cur_tok), SEEK_CUR);
+}
 
 // hadels file to tokenize
 void tokenizer_config()

@@ -1,9 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 
 char *keywords_arr[] = {
-	"commbox", "const", "var", "integer", "boolean", "address", "begin", "if", "then", 
-	"fi", "for", "in", "do", "od", "activate", "with", "timeout", "send", "to", "recv",
+	"commbox", "const", "var","begin", "if", "then", "fi", "for", 
+	"in", "do", "od", "activate", "with", "timeout", "send", "to", "recv",
         "from", "end", "true", "false", NULL	
+};
+
+char *types_arr[] = {
+ 	"integer", "boolean", "address", NULL 
 };
 
 char *paren_arr[] = {
@@ -20,7 +25,7 @@ char *logical_ops_arr[] = {
 
 
 char *spcl_ops[] = {
-	"|", ",", ":", ";", ":=", ">>>", NULL
+	"|", ",", ":", ";", ":=", "=", ">>>", NULL
 };
 
 
@@ -37,11 +42,44 @@ int is_digit(char ch)
 }
 
 
+int is_number(char *str)
+{
+	int i = 0, result = 1;
+	while(result == 1 && str[i] != '\0')
+	{
+		if(!is_digit(str[i]))
+			result = 0;
+		i += 1;
+	}
+	return result;
+}
+// check if str is one of keywords.
+int is_keyword(char *str)
+{
+	int i = 0, j = 0,  result = 0;
+	char **str_arr[] = {
+			keywords_arr, types_arr, logical_ops_arr, NULL
+	};
+
+	while(result == 0 && (str_arr[i] != NULL))
+	{
+		j = 0;
+		while(result == 0 && (str_arr[i][j] != NULL))
+		{
+			if(strcmp(str, str_arr[i][j]) == 0)
+				result = 1;
+			j += 1;
+		}
+		i += 1;
+	}
+	return result;
+}
+
 // check if str is valid identifier
 int is_valid_id(char *str)
 {
 	int result = 1, i = 0;
-	if(str[i] == '_' || is_alpha(str[i]))
+	if(!is_keyword(str) && (str[i] == '_' || is_alpha(str[i])))
 	{
 		i += 1;
 		while((result == 1) && (str[i] != '\0'))
@@ -71,4 +109,16 @@ int is_present(char ch, char charSeq[])
                 i += 1;
         }
         return result;
+}
+
+int is_valid_type(char *str)
+{
+	int i = 0, result = 0;
+	while(result == 0 && (types_arr[i] != NULL))
+	{
+		if(strcmp(types_arr[i], str) == 0)
+			result = 1;
+		i += 1;
+	}
+	return result;
 }

@@ -1,13 +1,13 @@
 #include <stdio.h>
 
-#ifndef SYMBL_TABLE_H
-#define SYMBL_TABLE_H
+#ifndef SYMBOL_TABLE_H
+#define SYMBOL_TABLE_H
 
 struct symbol
 {
 	char *name;
-	char type;
-	int size;
+	int type, size;
+	void *value;
 	struct symbol *left, *right;	
 };
 
@@ -24,11 +24,14 @@ typedef struct SearchResult
 	struct symbol *sym;
 }SearchResult;
 
+struct symbol *create_symbol(char *name, int type, int size, void *value);
 int hash(struct symbol *sym, int capacity);
 struct sym_tab *get_new_table(int capacity);
 void destroy_table(struct sym_tab *tab);
+void print_table(struct sym_tab *tab);
 struct sym_tab *put(struct sym_tab *, struct symbol *sym);
 SearchResult search(struct sym_tab *tab, char *key);
+
 // tree methos 
 void collide_put(struct symbol *parent, struct symbol *sym);
 struct sym_tab *preorder_put(struct sym_tab *symbol_tab, struct symbol *sym);

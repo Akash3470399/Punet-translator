@@ -1,7 +1,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../intr/symbl_table.h"
+#include "../intr/symbol_table.h"
+
+// construct symbol from appropiate properties
+struct symbol *create_symbol(char *name, int type, int size, void *value)
+{
+	struct symbol *s = (struct symbol *)malloc(sizeof(struct symbol));
+	s->name = (char *)malloc(sizeof(char) * strlen(name));
+	strcpy(s->name, name);
+	s->type = type;
+	s->size = size;
+	s->value = value;
+	return s;
+}
 
 // logic is addition of char ascii value multiplied by its position 
 // and position starts from1
@@ -163,12 +175,6 @@ void preorder_print(struct symbol *sym)
 		preorder_print(sym->left);
 		preorder_print(sym->right);
 	}
-}
-
-
-int main()
-{
-	return 0;
 }
 
 /*
