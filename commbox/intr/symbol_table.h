@@ -31,6 +31,7 @@ void destroy_table(struct sym_tab *tab);
 void print_table(struct sym_tab *tab);
 struct sym_tab *put(struct sym_tab *, struct symbol *sym);
 SearchResult search(struct sym_tab *tab, char *key);
+void *get_value_of(struct symbol *sym);
 
 // tree methos 
 void collide_put(struct symbol *parent, struct symbol *sym);

@@ -5,7 +5,7 @@
 #include "../intr/tokenizer.h"
 #include "../intr/helper.h"
 #include "../intr/symbol_table.h"
-#include "../intr/parse_tree.h"
+#include "../intr/blocks/program.h"
 #include "../intr/syntax_checker.h"
 int err = 0;
 
@@ -89,6 +89,11 @@ void check_commbox()
 	{
 		p.name = (char *)malloc(sizeof(char) *(strlen(name)+1));
 		strcpy(p.name, name);
+	}
+	else
+	{
+		printf("Invalid name.\n");
+	       	err = 1;
 	}
 }
 
@@ -185,7 +190,34 @@ void check_declr()
 		go_back();
 		check_declr();
 	}
+}
 
+void check_guard()
+{
+	enum token tok;
+	if(next() == GUARD)
+	{
+		check_predicate();
+
+		if(next() == ACTION)
+			check_action();
+		else err = 1;
+
+		if(next() == GUARD)
+			check_guard();
+		else go_back();
+	}
+		
+}
+
+void check_begin()
+{
+	if(next() == BEGIN)
+		check_guard();
+	else
+		err = 1;
+
+	if(next() != END) err = 1;
 }	
 
 int main()
@@ -196,9 +228,10 @@ int main()
 	
 	p.var_sym = get_new_table(2);
 	p.const_sym = get_new_table(2);
+
 	check_commbox();
 	tok = next();
-	if(tok == VAR || tok == CONST)
+	if(err == 0 && (tok == VAR || tok == CONST))
 	{
 		go_back();
 		check_declr();
@@ -206,13 +239,10 @@ int main()
 		if(err == 1) printf("Invalid declaration block.\n");
 	}
 	printf("err :%d\n", err);
-	return 0;
-	go_back();
 
+	go_back();
 	check_begin();	
-	//return 0;
+	else err = 1;
+	return 0;
 }
-void check_begin()
-{
-	int i;
-}
+

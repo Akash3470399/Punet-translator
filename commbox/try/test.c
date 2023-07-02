@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../intr/tokenizer.h"
+#include "../intr/blocks/condition.h"
+#include "../intr/symbol_table.h"
 
 int main()
 {
+	struct symbol_table *tab = get_new_table(2);
+	tokenizer_config();
 
-	int *b = malloc(sizeof(int));
-	*b = 4;
-	void *a = (void *)b;
-	int *c = (int *)a;
-	printf("%d", *c);
-	return 0;
+	
 }

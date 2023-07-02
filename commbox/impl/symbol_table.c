@@ -127,6 +127,12 @@ SearchResult search(struct sym_tab *tab, char *key)
 	return sr;	
 }
 
+void *get_value_of(struct symbol *sym)
+{
+	if(sym != NULL)
+		return sym->value;	
+	else return NULL;
+}
 
 // if index is pre filled then store multiple symbols in bst form.
 // put symbol sym in bst with given parent

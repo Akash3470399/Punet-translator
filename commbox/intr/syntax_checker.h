@@ -12,6 +12,7 @@ void check_valid_type();
 void check_valid_value(struct symbol **sym);
 void check_data_item(char);			
 void check_declr();
+void check_guard();
 void check_begin();
 
 extern int err;
