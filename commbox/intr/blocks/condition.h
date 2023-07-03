@@ -29,16 +29,29 @@ struct _condition
 		_condition2 *c2;
 		struct symbol *s;
 		int *bool_val;
+
+		// eval method
+		int (*eval)(struct _condition *);
 	}c;
+	void (*destroy)(); 
 };
 
+
+// condition creation methods.
 _condition *create_condition(void *cond, enum condition_type type);
-_condition1 *get_condition1(_condition *c);
-_condition2 *get_condition2(_condition *c1, _condition *c2);
+_condition1 *create_condition1(_condition *c);
+_condition2 *create_condition2(_condition *c1, _condition *c2);
 
 // ***************** condtion evalutor methods ************
 int eval(_condition *exp);
-int eval_or_condition(_condition *exp);
-int eval_and_condition(_condition *exp);
-int eval_not_condition(_condition *exp);
+int eval_or_condition(_condition2 *exp);
+int eval_and_condition(_condition2 *exp);
+int eval_not_condition(_condition1 *exp);
+
+// destroy method
+void delete_condition(_condition *c);
+void destroy_condition(_condition *c);
+void destroy_condition1(_condition *c);
+void destroy_condition2(_condition *c);
+
 #endif

@@ -8,20 +8,25 @@ _condition *create_condition(void *cond, enum condition_type type)
 {
 	_condition *newc = (_condition *)malloc(sizeof(_condition));
 	newc->type = type;
+	newc->c.eval = eval;
 	switch(type)
 	{
 		case NOT_CONDITION: 
 			newc->c.c1 = (_condition1 *)cond; 
+			newc->destroy = destroy_condition;
 			break;
 		case AND_CONDITION: 
 		case OR_CONDITION:
-			newc->c.c2 = (_condition2 *)cond; 
+			newc->c.c2 = (_condition2 *)cond;
+		       	newc->destroy = destroy_condition2;	
 			break;
 		case ID_CONDITION:
 			newc->c.s = (struct symbol *)cond;
+			newc->destroy = delete_condition;
 			break;
 		case BOOL_VAL:
 			newc->c.bool_val = (int *)cond;
+			newc->destroy = delete_condition;
 			break;
 		default :break;
 	}
@@ -47,7 +52,7 @@ _condition2 *get_condition2(_condition *c1, _condition *c2)
 
 // ***************** condtion evalutor methods ************
 
-int eval(_condtion *exp)
+int eval(_condition *exp)
 {
 	int result;
 	int *val;
@@ -73,19 +78,40 @@ int eval(_condtion *exp)
 	}
 }
 
-int eval_or_condition(_condition *exp)
+int eval_or_condition(_condition2 *exp)
 {
 	return (eval(exp->c1) || eval(exp->c2));
 }
 
-int eval_and_condition(_condition *exp)
+int eval_and_condition(_condition2 *exp)
 {
 	return (eval(exp->c1) &&  eval(exp->c2));
 }
 
-int eval_not_condition(_condition *exp)
+int eval_not_condition(_condition1 *exp)
 {
 	return !(eval(exp->c));
+}
+
+
+
+// **************  condition destroy methos ************
+void delete_condition(_condition *c)
+{
+	free(c);
+}
+
+void destroy_condition1(_condition *c)
+{
+	c->destroy(c->c.c1);
+	free(c);
+}
+
+void destroy_condition2(_condition *c)
+{
+	c->destroy(c->c.c1);
+	c->destroy(c->c.c2);
+	free(c);
 }
 
 void main()

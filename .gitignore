@@ -1,6 +1,6 @@
 *.o
 *.out
-*.swp
+*.gch
 tokenizer
 helper
 exe
