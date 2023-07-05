@@ -16,11 +16,6 @@ typedef struct _condition _condition;
 typedef struct _event_ins _event_ins;
 typedef struct _control_ins _control_ins;
 
-struct _condition1
-{
-	_condition *c;
-};
-
 struct _condition2
 {
 	_condition *c1;
@@ -31,7 +26,7 @@ struct _condition
 {
 	enum condition_type type;
 	union conditon{
-		_condition1 *c1;
+		_condition *c;
 		_condition2 *c2;
 		struct symbol *s;
 		int *bool_val;
@@ -47,7 +42,7 @@ struct _guard
 {
 	_condition *predicate;
 	_instruction *statement;
-	void (*destroy)(struct _guard*); 
+	//void (*destroy)(struct _guard*); 
 };
 
 
@@ -59,6 +54,8 @@ struct _instruction
 		_event_ins *event;
 		_control_ins *control_stmt;		
 	}s; // statement
+	    //
+	void (*destroy)(struct _instruction *);
 };
 
 

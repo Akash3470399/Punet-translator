@@ -5,7 +5,10 @@
 #include "../intr/tokenizer.h"
 #include "../intr/helper.h"
 #include "../intr/symbol_table.h"
+#include "../intr/blocks/structs.h"
 #include "../intr/blocks/program.h"
+#include "../intr/blocks/condition.h"
+#include "../intr/blocks/guard.h"
 #include "../intr/syntax_checker.h"
 int err = 0;
 
@@ -192,15 +195,74 @@ void check_declr()
 	}
 }
 
+
+_condition *parse_condition()
+{
+	enum token tok = next();
+	_condition *c;
+	_condition2 *c1;
+	SearchResult sr;
+	
+	switch(tok)
+	{
+		case OROUND_PAREN:
+			//new_c = parse_condition();
+			check_for_tok(CROUND_PAREN);
+			break;
+		case NOT:
+			c = create_condition((void *)parse_condition(), NOT_CONDITION);	
+			break;
+		case ID:
+			sr = search(p.var_sym, cur_tok);
+			if(sr.found == 0)
+				sr = search(p.const_sym, cur_tok);
+
+			if(sr.found == 1)
+				c = create_condition((void *)sr.sym, ID_CONDITION);
+			else err = 1;
+			break;
+		case TRUE:
+			c = create_condition((void *)&__true, BOOL_VAL);
+			break;
+		case FALSE:
+			c = create_condition((void *)&__false, BOOL_VAL);	
+			break;
+
+		default: err = 1;
+	}	
+	
+	tok = next();
+	if(tok == AND)
+	{
+		c1 = create_condition2(c, parse_condition());
+		c = create_condition((void *)c1, AND_CONDITION);
+	}
+	else if(tok == OR)
+	{
+		c1 = create_condition2(c, parse_condition());
+		c = create_condition((void *)c, OR_CONDITION);
+	}
+	else go_back();
+	return c;
+}
+
+void check_predicate(_guard **guard)
+{
+	_condition *c = parse_condition();
+	(*guard)->predicate = c;
+}
+
 void check_guard()
 {
 	enum token tok;
+	_guard *guard = create_guard(NULL, NULL);
 	if(next() == GUARD)
 	{
-		check_predicate();
+		check_predicate(&guard);
 
 		if(next() == ACTION)
-			check_action();
+			1==1;
+			//check_action();
 		else err = 1;
 
 		if(next() == GUARD)
@@ -241,8 +303,7 @@ int main()
 	printf("err :%d\n", err);
 
 	go_back();
-	check_begin();	
-	else err = 1;
+	check_begin();
 	return 0;
 }
 

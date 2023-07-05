@@ -1,5 +1,5 @@
 #include "../symbol_table.h"
-
+#include "structs.h"
 #ifndef PROGRAM_H
 #define PROGRAM_H
 

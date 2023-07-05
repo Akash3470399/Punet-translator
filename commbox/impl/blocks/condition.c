@@ -3,6 +3,8 @@
 #include "../../intr/blocks/condition.h"
 #include "../../intr/symbol_table.h"
 
+
+int __true = 1, __false = 0;
 // **************  condition creation methods **********
 _condition *create_condition(void *cond, enum condition_type type)
 {
@@ -12,8 +14,8 @@ _condition *create_condition(void *cond, enum condition_type type)
 	switch(type)
 	{
 		case NOT_CONDITION: 
-			newc->c.c1 = (_condition1 *)cond; 
-			newc->destroy = destroy_condition;
+			newc->c.c = (_condition *)cond; 
+			newc->destroy = destroy_condition1;
 			break;
 		case AND_CONDITION: 
 		case OR_CONDITION:
@@ -33,15 +35,7 @@ _condition *create_condition(void *cond, enum condition_type type)
 	return newc;
 }
 
-
-_condition1 *get_condition1(_condition *c)
-{
-	_condition1 *new_condition = (_condition1 *)malloc(sizeof(_condition1));
-	new_condition->c = c;
-	return new_condition;
-}
-
-_condition2 *get_condition2(_condition *c1, _condition *c2)
+_condition2 *create_condition2(_condition *c1, _condition *c2)
 {
 	_condition2 *new_condition = (_condition2 *)malloc(sizeof(_condition2));
 	new_condition->c1 = c1;
@@ -59,7 +53,7 @@ int eval(_condition *exp)
 	switch(exp->type)
 	{
 		case NOT_CONDITION:
-			result = eval_not_condition(exp->c.c1);
+			result = eval_not_condition(exp->c.c);
 			break;
 		case OR_CONDITION:
 		       result = eval_or_condition(exp->c.c2);
@@ -88,9 +82,9 @@ int eval_and_condition(_condition2 *exp)
 	return (eval(exp->c1) &&  eval(exp->c2));
 }
 
-int eval_not_condition(_condition1 *exp)
+int eval_not_condition(_condition *exp)
 {
-	return !(eval(exp->c));
+	return !(eval(exp->c.c));
 }
 
 
@@ -103,18 +97,14 @@ void delete_condition(_condition *c)
 
 void destroy_condition1(_condition *c)
 {
-	c->destroy(c->c.c1);
+	c->destroy(c->c.c);
 	free(c);
 }
 
 void destroy_condition2(_condition *c)
 {
-	c->destroy(c->c.c1);
-	c->destroy(c->c.c2);
+	c->destroy((c->c.c2)->c1);
+	c->destroy((c->c.c2)->c2);
 	free(c);
 }
 
-void main()
-{
-	
-}
