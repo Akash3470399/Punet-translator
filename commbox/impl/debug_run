@@ -1,7 +1,9 @@
 gcc helper.c -c -o helper -g 
 gcc tokenizer.c -c -o tokenizer -g
 gcc symbol_table.c -c -o symbol_table -g
-gcc syntax_checker.c tokenizer helper symbol_table -o exe -g
-rm helper tokenizer symbol_table
+gcc blocks/condition.c -c -o condition -g
+gcc blocks/guard.c -c -o guard -g
+gcc syntax_checker.c tokenizer helper symbol_table condition guard -o exe -g
+rm helper tokenizer symbol_table condition guard
 gdb ./exe
 rm exe 

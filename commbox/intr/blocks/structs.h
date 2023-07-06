@@ -32,8 +32,8 @@ struct _condition
 		int *bool_val;
 
 		// eval method
-		int (*eval)(struct _condition *);
 	}c;
+	int (*eval)(struct _condition *);
 	void (*destroy)(); 
 };
 

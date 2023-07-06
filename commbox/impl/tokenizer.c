@@ -51,7 +51,7 @@ enum token next()
 	};
 
 	char delimeters2[] = {
-		'=', '>', '<', ':', '\0'
+		'|', '=', '>', '<', ':', '\0'
 	};
 
 	char ch;

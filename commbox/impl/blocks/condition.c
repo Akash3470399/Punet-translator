@@ -10,7 +10,7 @@ _condition *create_condition(void *cond, enum condition_type type)
 {
 	_condition *newc = (_condition *)malloc(sizeof(_condition));
 	newc->type = type;
-	newc->c.eval = eval;
+	newc->eval = eval;
 	switch(type)
 	{
 		case NOT_CONDITION: 
@@ -53,7 +53,7 @@ int eval(_condition *exp)
 	switch(exp->type)
 	{
 		case NOT_CONDITION:
-			result = eval_not_condition(exp->c.c);
+			result = eval_not_condition(exp);
 			break;
 		case OR_CONDITION:
 		       result = eval_or_condition(exp->c.c2);
@@ -108,3 +108,36 @@ void destroy_condition2(_condition *c)
 	free(c);
 }
 
+
+// print
+void print_condition(_condition *c)
+{
+	printf("( ");
+	switch(c->type)
+	{
+		case NOT_CONDITION:
+			printf("not ");
+			print_condition(c->c.c);
+			break;
+		case OR_CONDITION:
+			print_condition((c->c.c2)->c1);
+			printf("or ");
+			print_condition((c->c.c2)->c2);
+			break;
+		case AND_CONDITION:
+			print_condition((c->c.c2)->c1);
+			printf("and ");
+			print_condition((c->c.c2)->c2);
+			break;
+		case ID_CONDITION:
+			printf("%s ", c->c.s->name);
+			break;
+		case BOOL_VAL:
+			if(c->c.bool_val == &__true)
+				printf("true ");
+			else if(c->c.bool_val == &__false)
+				printf("false ");
+
+	}
+	printf(") ");
+}

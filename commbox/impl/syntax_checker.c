@@ -10,6 +10,9 @@
 #include "../intr/blocks/condition.h"
 #include "../intr/blocks/guard.h"
 #include "../intr/syntax_checker.h"
+
+
+int undefined = 1;
 int err = 0;
 
 
@@ -199,31 +202,40 @@ void check_declr()
 _condition *parse_condition()
 {
 	enum token tok = next();
-	_condition *c;
+	_condition *c = NULL;
 	_condition2 *c1;
 	SearchResult sr;
 	
 	switch(tok)
 	{
 		case OROUND_PAREN:
-			//new_c = parse_condition();
-			check_for_tok(CROUND_PAREN);
+			c = parse_condition();
+			if(c == NULL) err = 1;
+			else check_for_tok(CROUND_PAREN);
 			break;
+
+		case CROUND_PAREN:
+			go_back();
+			break;
+
 		case NOT:
 			c = create_condition((void *)parse_condition(), NOT_CONDITION);	
 			break;
+
 		case ID:
 			sr = search(p.var_sym, cur_tok);
 			if(sr.found == 0)
 				sr = search(p.const_sym, cur_tok);
 
-			if(sr.found == 1)
+			if((sr.found == 1) && (sr.sym->type == BOOLEAN) && (sr.sym->value != NULL))
 				c = create_condition((void *)sr.sym, ID_CONDITION);
 			else err = 1;
 			break;
+
 		case TRUE:
 			c = create_condition((void *)&__true, BOOL_VAL);
 			break;
+
 		case FALSE:
 			c = create_condition((void *)&__false, BOOL_VAL);	
 			break;
@@ -240,7 +252,7 @@ _condition *parse_condition()
 	else if(tok == OR)
 	{
 		c1 = create_condition2(c, parse_condition());
-		c = create_condition((void *)c, OR_CONDITION);
+		c = create_condition((void *)c1, OR_CONDITION);
 	}
 	else go_back();
 	return c;
@@ -248,7 +260,26 @@ _condition *parse_condition()
 
 void check_predicate(_guard **guard)
 {
-	_condition *c = parse_condition();
+	enum token tok = next();
+	_condition *c; 
+	switch(tok)
+	{
+		case SEND:
+
+			break;
+		case RECV:
+
+			break;
+		case TIMEOUT:
+
+			break;
+		default:
+			go_back();
+			c = parse_condition();
+	}
+
+
+	printf("op %d", c->eval(c));
 	(*guard)->predicate = c;
 }
 
@@ -259,7 +290,7 @@ void check_guard()
 	if(next() == GUARD)
 	{
 		check_predicate(&guard);
-
+		print_condition(guard->predicate);
 		if(next() == ACTION)
 			1==1;
 			//check_action();
@@ -286,8 +317,7 @@ int main()
 {
 	enum token tok;
 	tokenizer_config();
-	//print_tokens();
-	
+	// print_tokens();return 0;
 	p.var_sym = get_new_table(2);
 	p.const_sym = get_new_table(2);
 

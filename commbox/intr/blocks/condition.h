@@ -23,4 +23,5 @@ void destroy_condition(_condition *c);
 void destroy_condition1(_condition *c);
 void destroy_condition2(_condition *c);
 
+void print_condition(_condition *c);
 #endif
