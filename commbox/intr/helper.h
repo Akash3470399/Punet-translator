@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include "symbol_table.h"
+#include "blocks/structs.h"
+
 #ifndef HELPER_H
 #define HELPER_H
 
@@ -11,6 +14,8 @@ int is_keyword(char *str);
 int is_space(char);
 int is_present(char ch, char charSeq[]);
 int is_valid_type(char *str);
+
+SearchResult master_search(struct program p, char *str);
 
 
 extern char *keywords_arr[];

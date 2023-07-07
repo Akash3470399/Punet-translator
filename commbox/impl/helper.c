@@ -122,3 +122,5 @@ int is_valid_type(char *str)
 	}
 	return result;
 }
+
+

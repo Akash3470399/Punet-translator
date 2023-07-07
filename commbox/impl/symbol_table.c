@@ -1,23 +1,14 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../intr/blocks/program.h"
 #include "../intr/symbol_table.h"
 
-// construct symbol from appropiate properties
-struct symbol *create_symbol(char *name, int type, int size, void *value)
-{
-	struct symbol *s = (struct symbol *)malloc(sizeof(struct symbol));
-	s->name = (char *)malloc(sizeof(char) * strlen(name));
-	strcpy(s->name, name);
-	s->type = type;
-	s->size = size;
-	s->value = value;
-	return s;
-}
 
 // logic is addition of char ascii value multiplied by its position 
-// and position starts from1
-// at the end hash value is the value which is opted by taking mod of that sum
+// and position starts from 1
+// hash value is the value which is opted by taking mod of that sum
 int hash(struct symbol *sym, int capacity)
 {
 	int index = 0, i = 0;
@@ -30,19 +21,31 @@ int hash(struct symbol *sym, int capacity)
 	return index;
 }
 
-// if size of hashtable is full then grow the table size by 2
-struct sym_tab *grow_hashtable(struct sym_tab *symbol_tab)
+
+// construct symbol from appropiate properties
+struct symbol *create_symbol(char *name, int type, int size, void *value)
 {
-	int i = 0;
-	struct sym_tab *new_tab = get_new_table(symbol_tab->capacity * 2);
-	while(i < symbol_tab->capacity)
-	{
-		if(symbol_tab->table[i] != NULL)
-			new_tab = preorder_put(new_tab, symbol_tab->table[i]);
-		i += 1;
-	}
-	destroy_table(symbol_tab);
-	return new_tab;
+	struct symbol *s = (struct symbol *)malloc(sizeof(struct symbol));
+	s->name = (char *)malloc(sizeof(char) * strlen(name));
+	strcpy(s->name, name);
+	s->type = type;
+	s->size = size;
+	s->value = value;
+	s->destroy = destroy_symbol;
+	return s;
+}
+
+void destroy_symbol(struct symbol *sym)
+{
+	free(sym->name);
+	free(sym);
+}
+
+void *get_value_of(struct symbol *sym)
+{
+	if(sym != NULL)
+		return sym->value;	
+	else return NULL;
 }
 
 // initilizations requied for symbol table hash table.
@@ -58,11 +61,51 @@ struct sym_tab *get_new_table(int capacity)
 	return tab;
 }
 
-// destroy table.
-void destroy_table(struct sym_tab *tab)
+struct sym_tab *delete_sym(struct sym_tab *tab, struct symbol *sym)
+{
+	int key; 
+	if(tab != NULL && sym != NULL)
+	{
+		key = hash(sym , (tab)->capacity);
+		(tab)->table[key] = delete_from_tree((tab)->table[key], sym);
+		if((tab)->table[key] == NULL) (tab)->size -= 1;
+	}
+	return tab;
+}
+
+// delete table.
+void delete_table(struct sym_tab *tab)
 {
 	free(tab->table);
 	free(tab);
+}
+
+// delete table.
+void destroy_table(struct sym_tab *tab)
+{
+	int i = 0;
+	while(i < tab->capacity)
+	{
+		if(tab->table[i] != NULL)
+			destroy_sym_tree(tab->table[i]);
+		i += 1;
+	}
+	delete_table(tab);
+}
+
+// if size of hashtable is full then grow the table size by 2
+struct sym_tab *grow_hashtable(struct sym_tab *symbol_tab)
+{
+	int i = 0;
+	struct sym_tab *new_tab = get_new_table(symbol_tab->capacity * 2);
+	while(i < symbol_tab->capacity)
+	{
+		if(symbol_tab->table[i] != NULL)
+			new_tab = preorder_put(new_tab, symbol_tab->table[i]);
+		i += 1;
+	}
+	delete_table(symbol_tab);
+	return new_tab;
 }
 
 void print_table(struct sym_tab *tab)
@@ -79,6 +122,7 @@ void print_table(struct sym_tab *tab)
 		i += 1;
 	}
 }
+
 // put sym symbol in sym_tab hash map
 // collided symbols are stored in the form of bst
 // according to strcmp value of names of symbles.
@@ -127,11 +171,13 @@ SearchResult search(struct sym_tab *tab, char *key)
 	return sr;	
 }
 
-void *get_value_of(struct symbol *sym)
+// search in both var & const symbols.
+SearchResult master_search(struct program p, char *str)
 {
-	if(sym != NULL)
-		return sym->value;	
-	else return NULL;
+	SearchResult sr = search(p.var_sym, str);
+	if(sr.found == 0)
+		sr = search(p.const_sym, str);
+	return sr;
 }
 
 // if index is pre filled then store multiple symbols in bst form.
@@ -183,29 +229,87 @@ void preorder_print(struct symbol *sym)
 	}
 }
 
-/*
-int main()
+void destroy_sym_tree(struct symbol *sym)
 {
-	int i = 0;
-	char str[30];
-	struct symbol s1 = {"s1asdf", 'a', 1, NULL, NULL};
-	struct symbol s2 = {"sd2fsdf", 'a', 1, NULL, NULL};
-	struct symbol s3 = {"s3", 'a', 1, NULL, NULL};
-	struct symbol s4 = {"s4dfdsd", 'a', 1, NULL, NULL};
-	struct symbol s5 = {"ssldfk5", 'a', 1, NULL, NULL};
-	struct sym_tab *t = get_new_table(1);
-	t = put(t, &s1);
-	t = put(t, &s2);
-	t = put(t, &s3);
-	t = put(t, &s4);
-	t = put(t, &s5);
-	print_table(t);
-	SearchResult sr;
-	while(i < 3)
+	if(sym != NULL)
 	{
-		printf("Enter key ");
-		scanf("%s", str);
-		sr = search(t, str);
-		printf("%d \n", sr.found);
+		destroy_sym_tree(sym->left);
+		destroy_sym_tree(sym->right);
+		sym->destroy(sym);
 	}
-}*/
+}
+
+struct symbol *delete_from_tree(struct symbol *tree, struct symbol *sym)
+{
+	struct symbol *ptr = tree, *parent = NULL;	
+	if(ptr == sym)
+		ptr = remove_head(tree);
+	else
+	{
+		while(ptr != NULL && ptr != sym)
+		{
+			parent = ptr;
+			if(strcmp(sym->name, ptr->name) <= 0)
+				ptr = ptr->left;
+			else
+				ptr = ptr->right;
+		}	
+
+		if(ptr != NULL)
+		{
+			if(ptr->left == NULL && ptr->right == NULL)
+			{
+				if(parent->left == ptr)
+					parent->left = NULL;
+				else parent->right = NULL;
+				ptr->destroy(ptr);
+			}
+			else
+			{
+				if(parent->left == ptr)
+					parent->left = remove_head(ptr);
+				else parent->right = remove_head(ptr);
+			}
+		
+		}
+		ptr = tree;
+	}
+	return ptr;	
+}
+
+struct symbol *remove_head(struct symbol *sym)
+{
+	struct symbol *ptr = sym, *parent = NULL; 
+	if(ptr->left == NULL && ptr->right == NULL)
+	{
+		ptr->destroy(ptr);
+		ptr = NULL;
+	}
+	else if(ptr->left != NULL && ptr->right == NULL)
+	{
+		ptr = ptr->left;
+		sym->destroy(sym);
+	}
+	else if(ptr->right != NULL && ptr->right->left == NULL && ptr->right->right == NULL)
+	{
+		ptr = ptr->right;
+		ptr->left = sym->left;
+		sym->destroy(sym);
+	}
+	
+	else
+	{
+		ptr = ptr->right;
+		while(ptr->left != NULL)
+		{
+			parent = ptr;
+			ptr = ptr->left;
+		}
+		parent->left = ptr->right;
+		ptr->left = sym->left;
+		ptr->right = sym->right;
+		sym->destroy(sym);
+	}
+	return ptr;
+}
+

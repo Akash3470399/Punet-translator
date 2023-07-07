@@ -12,8 +12,8 @@
 #include "../intr/syntax_checker.h"
 
 
-int undefined = 1;
 int err = 0;
+struct program p;
 
 
 void check_for_tok(enum token exp_tok)
@@ -182,16 +182,18 @@ void check_data_item(char c_v)
 
 void check_declr()
 {
+	SearchResult sr;
 	enum token tok = next();
+	char str[32];
 	if(tok == VAR)
 		check_data_item('v');			
 	else if (tok == CONST)
 		check_data_item('c');
 	else
 		err = 1;
-	
+			
 	tok = next();
-	if(tok == VAR || tok == CONST)
+	if(err == 0 && (tok == VAR || tok == CONST))
 	{
 		go_back();
 		check_declr();
@@ -210,7 +212,7 @@ _condition *parse_condition()
 	{
 		case OROUND_PAREN:
 			c = parse_condition();
-			if(c == NULL) err = 1;
+			if(c == NULL) err = 1; // for () err handling
 			else check_for_tok(CROUND_PAREN);
 			break;
 
@@ -277,30 +279,96 @@ void check_predicate(_guard **guard)
 			go_back();
 			c = parse_condition();
 	}
-
-
-	printf("op %d", c->eval(c));
 	(*guard)->predicate = c;
+}
+
+void check_event()
+{
+
+}
+
+// for (key , val) in to_itr do
+//        .... (instructions)
+//  od
+void check_forloop()
+{
+	SearchResult sr1, sr2, sr3;
+	char key[32], val[32], to_itr[32];
+	enum token tok;
+
+	check_for_tok(FOR), check_for_tok(OROUND_PAREN);
+	check_is_valid_id();
+	strcpy(key, cur_tok);
+	
+	check_for_tok(COMMA);
+	check_is_valid_id();
+	strcpy(val, cur_tok);
+
+	check_for_tok(CROUND_PAREN), check_for_tok(IN);
+	check_for_tok(ID);
+	strcpy(to_itr, cur_tok);
+
+	sr1 = master_search(p, key), sr2 = master_search(p, val);
+	sr3 = master_search(p, to_itr);
+	// if key & val new labels
+	if((err == 0) && (sr1.found == 0) && (sr2.found == 0) && (sr3.found == 1))
+		1 == 1;
+	else err = 1;
+	
+}
+
+
+void check_ifstmt()
+{
+
+}
+
+void check_asign()
+{
+
+}
+
+void check_action()
+{
+	enum token tok = next();
+
+	go_back();
+	switch(tok)
+	{
+		case SEND:
+		case RECV:
+		case TIMEOUT:
+		case ACTIVATE:
+			check_event();
+			break;
+
+		case FOR:
+			check_forloop(); break;
+		case IF:
+			check_ifstmt(); break;
+		case ID:
+			check_asign(); break;
+		default:
+			err = 1;
+	}
 }
 
 void check_guard()
 {
-	enum token tok;
+	enum token tok = next();
 	_guard *guard = create_guard(NULL, NULL);
-	if(next() == GUARD)
+
+	if(tok == GUARD)
 	{
 		check_predicate(&guard);
-		print_condition(guard->predicate);
 		if(next() == ACTION)
-			1==1;
-			//check_action();
+			check_action();
 		else err = 1;
 
 		if(next() == GUARD)
 			check_guard();
 		else go_back();
-	}
-		
+	}	
 }
 
 void check_begin()
@@ -315,6 +383,8 @@ void check_begin()
 
 int main()
 {
+	SearchResult sr;
+	char str[32];
 	enum token tok;
 	tokenizer_config();
 	// print_tokens();return 0;
@@ -330,8 +400,22 @@ int main()
 
 		if(err == 1) printf("Invalid declaration block.\n");
 	}
-	printf("err :%d\n", err);
+	
+	printf("var");
+	print_table(p.var_sym);
+	while(1){
+	printf("enter to remove.");
+	scanf("%s", str);
 
+	sr = search(p.var_sym, str);
+	if(sr.found == 1)
+		p.var_sym = delete_sym(p.var_sym, sr.sym);
+
+	printf("var");
+	print_table(p.var_sym);
+	}
+	printf("err :%d\n", err);
+	return 0;
 	go_back();
 	check_begin();
 	return 0;

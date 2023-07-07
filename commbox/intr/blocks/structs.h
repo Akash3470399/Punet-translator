@@ -2,19 +2,36 @@
 #define STRUCTS_H
 
 
-enum ins_type {GUARD_INS, EVENT_INS, CONTROL_INS};
-enum condition_type {NOT_CONDITION, AND_CONDITION, OR_CONDITION, ID_CONDITION, BOOL_VAL};
-enum event_type {SEND_EVENT, RECV_EVENT, ACTIVATE_EVENT, TIMEOUT_EVENT};
+enum ins_type {SEND_EVENT_INS, RECV_EVENT_INS, ACIVATE_EVENT_INS, TIMEOUT_EVENT_INS, IF_INS, FOR_INS, ASIGN_INS};
 
-typedef struct _instruction _instruction;
+enum condition_type {NOT_CONDITION, AND_CONDITION, OR_CONDITION, ID_CONDITION, BOOL_VAL};
+
+typedef struct _condition _condition;
+typedef struct _condition2 _condition2;
+
 typedef struct _guard _guard;
 
-typedef struct _condition1 _condition1;
-typedef struct _condition2 _condition2;
-typedef struct _condition _condition;
+typedef struct _instruction _instruction;
 
-typedef struct _event_ins _event_ins;
-typedef struct _control_ins _control_ins;
+typedef struct _forinloop_ins _forinloop_ins;
+typedef struct _ifthen_ins _ifthen_ins;
+
+
+typedef struct _body _body;
+
+
+struct _body
+{
+	_guard *head, *tail, *ptr;
+};
+
+struct program
+{
+	char *name;
+	struct sym_tab *var_sym;
+	struct sym_tab *const_sym;
+	struct _body *root;
+};
 
 struct _condition2
 {
@@ -50,23 +67,35 @@ struct _instruction
 {
 	enum ins_type type;
 	union{
-		_guard *guard;
-		_event_ins *event;
-		_control_ins *control_stmt;		
+		// events
+		_forinloop_ins *forinloop;	
+		_ifthen_ins *ifthenstmt;
 	}s; // statement
-	    //
+	struct _instruction *next;
 	void (*destroy)(struct _instruction *);
 };
 
 
-struct _event_ins
-{
 
+
+//********** INSTRUCTIONS ***********
+struct _forinloop_ins
+{
+	struct symbol *key, *val, *to_itr;
+	struct _instruction *ins_head;
+	
+	void (*execute)(struct _forinloop_ins *);
+	void (*destroy)(struct _forinloop_ins *);
 };
 
-struct _control_ins
-{
 
+struct _ifthen_ins
+{
+	_condition *predicate;
+	struct _instruction *ins_head;
+
+	void (*execute)(struct _ifthen_ins *);
+	void (*destroy)(struct _ifthen_ins *);
 };
 
 #endif

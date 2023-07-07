@@ -1,7 +1,7 @@
 #include "tokenizer.h"
-
 #ifndef SYNTAX_CHECKER_H
 #define SYNTAX_CHECKER_H
+
 
 
 
@@ -15,6 +15,9 @@ void check_declr();
 void check_guard();
 void check_begin();
 
+
+
 extern int err;
+
 
 #endif
