@@ -297,24 +297,17 @@ void check_forloop()
 	enum token tok;
 
 	check_for_tok(FOR), check_for_tok(OROUND_PAREN);
-	check_is_valid_id();
-	strcpy(key, cur_tok);
+	check_is_valid_id(); 	// cecking for valid key identifier
+	strcpy(key, cur_tok);	// collecting key identifier
 	
 	check_for_tok(COMMA);
-	check_is_valid_id();
-	strcpy(val, cur_tok);
+	check_is_valid_id();	// checking for valid val identifier 
+	strcpy(val, cur_tok);   // collecting the val identifier
 
 	check_for_tok(CROUND_PAREN), check_for_tok(IN);
-	check_for_tok(ID);
-	strcpy(to_itr, cur_tok);
+	check_for_tok(ID);		// checking for valid array identifier
+	strcpy(to_itr, cur_tok); 
 
-	sr1 = master_search(p, key), sr2 = master_search(p, val);
-	sr3 = master_search(p, to_itr);
-	// if key & val new labels
-	if((err == 0) && (sr1.found == 0) && (sr2.found == 0) && (sr3.found == 1))
-		1 == 1;
-	else err = 1;
-	
 }
 
 
@@ -368,7 +361,8 @@ void check_guard()
 		if(next() == GUARD)
 			check_guard();
 		else go_back();
-	}	
+	}
+	else err = 1;
 }
 
 void check_begin()
@@ -383,8 +377,6 @@ void check_begin()
 
 int main()
 {
-	SearchResult sr;
-	char str[32];
 	enum token tok;
 	tokenizer_config();
 	// print_tokens();return 0;
@@ -401,23 +393,9 @@ int main()
 		if(err == 1) printf("Invalid declaration block.\n");
 	}
 	
-	printf("var");
-	print_table(p.var_sym);
-	while(1){
-	printf("enter to remove.");
-	scanf("%s", str);
-
-	sr = search(p.var_sym, str);
-	if(sr.found == 1)
-		p.var_sym = delete_sym(p.var_sym, sr.sym);
-
-	printf("var");
-	print_table(p.var_sym);
-	}
-	printf("err :%d\n", err);
-	return 0;
 	go_back();
 	check_begin();
+	printf("err :%d\n", err);
 	return 0;
 }
 

@@ -8,7 +8,7 @@ char *keywords_arr[] = {
 };
 
 char *types_arr[] = {
- 	"integer", "boolean", "address", NULL 
+ 	"integer", "boolean", "address", "message", NULL 
 };
 
 char *paren_arr[] = {

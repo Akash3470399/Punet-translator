@@ -1,10 +1,20 @@
+/*
+ *	This file contains:
+ *
+ *		- Structures of each blocs
+ *			guard, condition, instructions, eventes, 
+ *	
+ *		- Enums for
+ *			instructions, condition 
+ */
+
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
 
 enum ins_type {SEND_EVENT_INS, RECV_EVENT_INS, ACIVATE_EVENT_INS, TIMEOUT_EVENT_INS, IF_INS, FOR_INS, ASIGN_INS};
 
-enum condition_type {NOT_CONDITION, AND_CONDITION, OR_CONDITION, ID_CONDITION, BOOL_VAL};
+enum condition_type {NOT_CONDITION, AND_CONDITION, OR_CONDITION, ID_CONDITION, BOOL_VAL, RECV_EVENT_CONDITION, TIMEOUT_EVENT_CONDITION};
 
 typedef struct _condition _condition;
 typedef struct _condition2 _condition2;
@@ -58,7 +68,7 @@ struct _condition
 struct _guard
 {
 	_condition *predicate;
-	_instruction *statement;
+	_instruction *ins_head;
 	//void (*destroy)(struct _guard*); 
 };
 
@@ -76,11 +86,10 @@ struct _instruction
 };
 
 
-
-
 //********** INSTRUCTIONS ***********
 struct _forinloop_ins
 {
+	char *key_str, *val_str;
 	struct symbol *key, *val, *to_itr;
 	struct _instruction *ins_head;
 	
