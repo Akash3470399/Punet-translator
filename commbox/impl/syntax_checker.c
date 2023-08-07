@@ -27,23 +27,29 @@ void check_valid_type(enum token tok)
 	err |= !(tok == INTEGER || tok == BOOLEAN || tok == ADDRESS);
 }
 
-
+/*
+ *	check for valid value, that can be asigned to variable.
+ *	evaluate valid value assign it to sym symbol.
+ */
 void check_valid_value(struct symbol **sym)
 {
 	enum token tok = next();
-	SearchResult sr;
+	SearchResult sr1, sr2;
 	int *val;
 
 	// also check if value is of same type as dedined in symbol type.
 	switch(tok)
 	{
 		case ID:
-			sr = search(p.var_sym, cur_tok);
+
 			// check if value symbol(ID) is predefined
-			if(sr.found == 1 && (sr.sym->type == (*sym)->type))
-				(*sym)->value = sr.sym->value;
-			else
-				err = 1;
+			sr1 = search(p.var_sym, cur_tok);
+			sr2 = search(p.const_sym, cur_tok);
+			if((sr1.found == 1) && (sr1.sym->type == (*sym)->type))
+				(*sym)->value = sr1.sym->value;
+			else if((sr2.found == 1) && (sr2.sym->type == (*sym)->type))
+				(*sym)->value = sr2.sym->value;
+			else err = 1;
 			break;
 
 		case NUMERIC:
@@ -99,7 +105,7 @@ void check_commbox()
 	else
 	{
 		printf("Invalid name.\n");
-	       	err = 1;
+	    err = 1;
 	}
 }
 
@@ -393,8 +399,8 @@ int main()
 		if(err == 1) printf("Invalid declaration block.\n");
 	}
 	
-	go_back();
-	check_begin();
+	// go_back();
+	// check_begin();
 	printf("err :%d\n", err);
 	return 0;
 }

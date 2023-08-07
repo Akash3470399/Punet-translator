@@ -4,8 +4,8 @@
  *		- Structures of each blocs
  *			guard, condition, instructions, eventes, 
  *	
- *		- Enums for
- *			instructions, condition 
+ *		- Enums for (various types of)
+ *			instructions, condition, events 
  */
 
 #ifndef STRUCTS_H
@@ -15,6 +15,8 @@
 enum ins_type {SEND_EVENT_INS, RECV_EVENT_INS, ACIVATE_EVENT_INS, TIMEOUT_EVENT_INS, IF_INS, FOR_INS, ASIGN_INS};
 
 enum condition_type {NOT_CONDITION, AND_CONDITION, OR_CONDITION, ID_CONDITION, BOOL_VAL, RECV_EVENT_CONDITION, TIMEOUT_EVENT_CONDITION};
+
+enum event_type {SEND_EVENT, RECV_EVENT, ACTIVATE_EVENT, TIMEOUT_EVENT};
 
 typedef struct _condition _condition;
 typedef struct _condition2 _condition2;
@@ -43,6 +45,7 @@ struct program
 	struct _body *root;
 };
 
+// ***** CONDITION  ********
 struct _condition2
 {
 	_condition *c1;
@@ -73,6 +76,7 @@ struct _guard
 };
 
 
+//********** INSTRUCTIONS ***********
 struct _instruction
 {
 	enum ins_type type;
@@ -80,13 +84,12 @@ struct _instruction
 		// events
 		_forinloop_ins *forinloop;	
 		_ifthen_ins *ifthenstmt;
-	}s; // statement
+	}i; // statement
 	struct _instruction *next;
 	void (*destroy)(struct _instruction *);
 };
 
 
-//********** INSTRUCTIONS ***********
 struct _forinloop_ins
 {
 	char *key_str, *val_str;
@@ -107,4 +110,30 @@ struct _ifthen_ins
 	void (*destroy)(struct _ifthen_ins *);
 };
 
+
+
+// ************ EVENTS ************
+// struct _event
+// {
+// 	event_type type;
+// 	union{
+		
+// 	}e;
+// };
+
+struct _send_event
+{
+	char *to_send, *receiver;
+};
+
+
+struct _recv_event
+{
+	char  *received, *sender;
+};
+
+struct _activate_event
+{
+	char *time_name; 
+};
 #endif

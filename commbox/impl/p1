@@ -1,6 +1,7 @@
 commbox hello        ;
-var a:integer = 1, b1:integer = a, c1:boolean=false, d1:address[234];
-var b:boolean = c1;
+var a:integer = 5, b1:integer = a, c1:boolean=false, d1:address[234];
+var b:boolean = true;
+
 begin
-|:`not (not true)>>> a = 1;
+|not (not true)>>> a = 1;
 end
